@@ -1,0 +1,16 @@
+{
+  "name": "enchiridion",
+  "version": "1.0.0",
+  "description": "The story about building this here website. So meta. Enjoy.",
+  "main": "index.js",
+  "dependencies": {
+    "fancy-code": "git+https://github.com/trezm/inline-code.git",
+    "inline-code": "git+https://github.com/trezm/inline-code.git",
+    "parcel": "^2.0.0-beta.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
