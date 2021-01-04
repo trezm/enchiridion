@@ -7,7 +7,7 @@ use thruster::context::basic_hyper_context::{
 };
 use thruster::App;
 use thruster::{async_middleware, middleware_fn};
-use thruster::{MiddlewareNext, MiddlewareResult};
+use thruster::{Context, MiddlewareNext, MiddlewareResult};
 use tokio;
 use tokio_postgres::{Client, NoTls};
 
@@ -30,7 +30,7 @@ async fn four_oh_four(mut context: Ctx, _next: MiddlewareNext<Ctx>) -> Middlewar
 
 pub async fn init() -> App<HyperRequest, Ctx, Arc<Client>> {
     let database_url = env::var("DATABASE_URL")
-        .unwrap_or("postgres://postgres:postgres@localhost/droppod".to_string());
+        .unwrap_or("postgres://postgres:postgres@localhost/enchiridion".to_string());
 
     let (client, connection) = tokio_postgres::connect(&database_url, NoTls).await.unwrap();
 
@@ -44,7 +44,13 @@ pub async fn init() -> App<HyperRequest, Ctx, Arc<Client>> {
     app.get("/ping", async_middleware!(Ctx, [ping]));
     app.get(
         "/users/github/oauth",
-        async_middleware!(Ctx, [oauth::github]),
+        async_middleware!(
+            Ctx,
+            [
+                thruster::middleware::query_params::query_params,
+                oauth::github
+            ]
+        ),
     );
     app.set404(async_middleware!(Ctx, [four_oh_four]));
 

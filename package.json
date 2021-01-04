@@ -2,15 +2,19 @@
   "name": "enchiridion",
   "version": "1.0.0",
   "description": "The story about building this here website. So meta. Enjoy.",
-  "main": "index.js",
+  "main": "client/index.html",
   "dependencies": {
-    "fancy-code": "git+https://github.com/trezm/inline-code.git",
-    "inline-code": "git+https://github.com/trezm/inline-code.git",
-    "parcel": "^2.0.0-beta.1"
+    "inline-code": "git+https://github.com/trezm/inline-code.git"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "parcel serve ./client/index.html",
+    "build": "parcel build ./client/index.html"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^14.14.19",
+    "gitriol": "file:./gitriol",
+    "parcel": "^2.0.0-beta.1"
+  }
 }

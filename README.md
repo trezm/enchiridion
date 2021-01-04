@@ -25,7 +25,8 @@ The stack is simple. We'll have
 
 Like any great Rust project, we start with
 
-```setup.sh
+<!--- file:setup.sh -->
+```sh
 mkdir enchiridion
 cd enchiridion
 cargo init --bin
@@ -42,7 +43,8 @@ This creates us a new rust project with all the basic goodies (`Cargo.toml`, etc
 
 I've included a few more packages in there that we'll need -- most of which are not worth mentioning individually. We'll go over them once we use them!
 
-```Cargo.toml
+<!--- file:Cargo.toml -->
+```toml
 [package]
 name = "enchiridion"
 version = "0.1.0"
@@ -64,18 +66,41 @@ Fantastic. We'll also need a `package.json` for our frontend packages. to do thi
 
 Now we'll install a few packages. Namely, we'll install the parcel bundler for easy dev mode, and the `inline-code` package to make everything look nice-nice. Note that `inline-code` is installed via its github url.
 
-```node-setup.sh
-npm install --save-dev parcel-bundler https://github.com/trezm/inline-code
+<!--- file:node-setup.sh -->
+```sh
+npm install --save-dev parcel@next https://github.com/trezm/inline-code
 ```
 
-Now, because I'm writing this as I'm making the project, I'm going to make a folder specifically for looking at this README and making sure it looks good as I write it. Go ahead and make a new folder in the root for this project and call it `client`. Then make another two files in it called `index.js` and `index.html`.
-\
-\
-\
-\
-.
+It'll also be nice to set up a few simple scripts we can run for the frontend while testing -- make sure your `package.json` looks kind of like this:
 
-```index.js
+<!--- file:package.json -->
+```json
+{
+  "name": "enchiridion",
+  "version": "1.0.0",
+  "description": "The story about building this here website. So meta. Enjoy.",
+  "main": "index.js",
+  "dependencies": {
+    "inline-code": "git+https://github.com/trezm/inline-code.git"
+  },
+  "scripts": {
+    "start": "parcel serve ./client/index.html",
+    "build": "parcel build ./client/index.html"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "parcel": "^2.0.0-beta.1"
+  }
+}
+```
+
+Especially note the two fields you'll have to add under `"scripts"`. This will make it so all you have to do to test is `npm run start`.
+
+Now, because I'm writing this as I'm making the project, I'm going to make a folder specifically for looking at this README and making sure it looks good as I write it. Go ahead and make a new folder in the root for this project and call it `client`. Then make another two files in it called `index.js` and `index.html`.
+
+<!--- file:index.js -->
+```js
 const fancyCode = require("inline-code");
 const markdown = require("../README.md");
 const el = document.getElementById("content");
@@ -85,19 +110,9 @@ page.parse(markdown);
 
 ```
 
-\
-\
-\
-\
-\
-\
-\
-\
-\
-\
-.
 
-```index.html
+<!--- file:index.html -->
+```html
 <html>
   <head>
     <link
@@ -119,18 +134,9 @@ Now you can see the README rendered nicely as we write it using `./node_modules/
 
 Next we're going to make the basic scaffold for a thruster app. Thruster, for those who don't know (probably most of you,) is a rust http framework that's loosely based off of an express or koa style syntax. It aims to be both fast and easy to write (or use? I don't know... [ask a linguist](https://www.robertpasternak.com/)). I tend to like to start my servers with two files: `main.rs`, and `app.rs`. `main.rs` serves as the entry point for a Rust binary, and `app.rs` will serve as the primary way to access our server as an object. Splitting the code like this will _also_ enable us to test endpoints much more easily. So, our `app.rs` will look at its most basic level like this:
 
-\
-\
-\
-\
-\
-\
-\
-\
-\
-.
 
-```src/app.rs
+<!--- file:src/app.rs -->
+```rs
 use hyper::Body;
 use thruster::context::basic_hyper_context::{
     generate_context, BasicHyperContext as Ctx, HyperRequest,
@@ -161,17 +167,9 @@ Starting at line 10, we see a middleware function. You don't necessarily need to
 
 Line 16 is a function that creates a new `App` object that you can make requests against. Line 18 sets the `GET /ping` route. This means that making a request to `/ping` should return `pong`.
 
-\
-\
-\
-\
-\
-\
-\
-\
-.
 
-```src/main.rs
+<!--- file:src/main.rs -->
+```rs
 use log::info;
 use std::env;
 use thruster::hyper_server::HyperServer;
@@ -212,7 +210,8 @@ I don't particularly feel like building out a full account system with password 
 
 Let's start by adding some shared config into the app. Thruster is able to propagate references through its middleware stack. This is very helpful for sharing configurations or, in this case, postgres client pools.
 
-```src/app.rs
+<!--- file:src/app.rs -->
+```rs
 use hyper::Body;
 use log::error;
 use std::env;
@@ -235,7 +234,7 @@ async fn ping(mut context: Ctx, _next: MiddlewareNext<Ctx>) -> MiddlewareResult<
 
 pub async fn init() -> App<HyperRequest, Ctx, Arc<Client>>  {
     let database_url = env::var("DATABASE_URL")
-        .unwrap_or("postgres://postgres:postgres@localhost/droppod".to_string());
+        .unwrap_or("postgres://postgres:postgres@localhost/enchiridion".to_string());
 
     let (client, connection) = tokio_postgres::connect(&database_url, NoTls).await.unwrap();
 
@@ -255,12 +254,6 @@ pub async fn init() -> App<HyperRequest, Ctx, Arc<Client>>  {
 
 Here we grab the database from an env variable, and then create a connection to that database. Then we pass that reference via Arc (automatic reference counting,) to the app creator so that it will know to pass that as the "state" when it generates a new context.
 
-\
-\
-\
-\
-\
-.
 
 ### Testing
 
@@ -268,16 +261,13 @@ Now let's make our first test case! Hurray TDD! Just kidding, we'll make a test 
 
 So we make a new folder and file, `tests/mod.rs`.
 
-```src/tests/mod.rs
+<!--- file:src/tests/mod.rs -->
+```rs
 mod oauth;
 
 ```
-\
-\
-\
-.
 
-And we'll make our first actual test file, `tess/oauth.rs`. We want to...
+And we'll make our first actual test file, `tests/oauth.rs`. We want to...
 
 1. Make sure that you can call the endpoint and receive a 200
 1. Make sure that given a code parameter, we make a request with that code parameter to get an access token
@@ -285,7 +275,8 @@ And we'll make our first actual test file, `tess/oauth.rs`. We want to...
 
 Let's start by just testing 1.
 
-```src/tests/oauth.rs
+<!--- file:src/tests/oauth.rs -->
+```rs
 use hyper::{Body, Request};
 use thruster::testing;
 use tokio::runtime::Runtime;
@@ -293,7 +284,7 @@ use tokio::runtime::Runtime;
 use crate::app;
 
 #[test]
-fn it_should_have_a_ping_route() {
+fn it_should_have_an_oauth_route() {
     let _ = Runtime::new().unwrap().block_on(async {
         let app = app::init().await;
 
@@ -317,25 +308,9 @@ Now we test by running `cargo test`, expecting a failure, and we get... a succes
 
 In thruster, the default behavior of the framework is to log a warning, but return a 200 even if no route is found. In order to actually cause a 404, you have to explicitly tell thruster what to do. We'll add some code to `app.rs` in order to catch any unfound route, and then appropriately set the status and return a message.
 
-\
-\
-\
-\
-\
-\
-\
-\
-\
-\
-\
-\
-\
-\
-\
-\
-.
 
-```src/app.rs
+<!--- file:src/app.rs -->
+```rs
 use hyper::Body;
 use log::error;
 use std::env;
@@ -366,7 +341,7 @@ async fn four_oh_four(mut context: Ctx, _next: MiddlewareNext<Ctx>) -> Middlewar
 
 pub async fn init() -> App<HyperRequest, Ctx, Arc<Client>> {
     let database_url = env::var("DATABASE_URL")
-        .unwrap_or("postgres://postgres:postgres@localhost/droppod".to_string());
+        .unwrap_or("postgres://postgres:postgres@localhost/enchiridion".to_string());
 
     let (client, connection) = tokio_postgres::connect(&database_url, NoTls).await.unwrap();
 
@@ -387,42 +362,22 @@ pub async fn init() -> App<HyperRequest, Ctx, Arc<Client>> {
 Now we run our test again, `cargo test`, and we see a failing test! Yay?
 
 
-\
-\
-\
-\
-\
-\
-\
-\
-\
-\
-\
-\
-\
-\
-\
-\
-.
 
 Let's start actually making a route controller now. First we make two new files, `src/controllers/mod.rs`, and `src/controllers/oauth.rs` (you'll have to make the `src/controllers` folder.)
 
 `mod.rs` is very simple, it just allows the controller folder to be used as a module. So we'll include the oauth controller like so:
 
-```src/controllers/mod.rs
+<!--- file:src/controllers/mod.rs -->
+```rs
 pub mod oauth;
 
 ```
 
-\
-\
-\
-\
-.
 
 We'll also have to update our `main.rs` to include _that_ module as well.
 
-```src/main.rs
+<!--- file:src/main.rs -->
+```rs
 use log::info;
 use std::env;
 use thruster::hyper_server::HyperServer;
@@ -449,19 +404,11 @@ async fn main() {
 
 ```
 
-\
-\
-\
-\
-\
-\
-\
-\
-.
 
 Our oauth controller should look very familiar -- it's an even simpler version of the ping middleware we made earlier! It will start life looking something like this:
 
-```src/controllers/oauth.rs
+<!--- file:src/controllers/oauth.rs -->
+```rs
 use thruster::{middleware_fn, BasicHyperContext as Ctx, MiddlewareNext, MiddlewareResult};
 
 #[middleware_fn]
@@ -471,19 +418,11 @@ pub async fn github(context: Ctx, _next: MiddlewareNext<Ctx>) -> MiddlewareResul
 
 ```
 
-\
-\
-\
-\
-\
-\
-\
-\
-.
 
 And, finally, we'll have to actually add our newly created oauth middleware as a route to the app. All we need to do is add the line to our app folder like this:
 
-```src/app.rs
+<!--- file:src/app.rs -->
+```rs
 use hyper::Body;
 use log::error;
 use std::env;
@@ -516,7 +455,7 @@ async fn four_oh_four(mut context: Ctx, _next: MiddlewareNext<Ctx>) -> Middlewar
 
 pub async fn init() -> App<HyperRequest, Ctx, Arc<Client>> {
     let database_url = env::var("DATABASE_URL")
-        .unwrap_or("postgres://postgres:postgres@localhost/droppod".to_string());
+        .unwrap_or("postgres://postgres:postgres@localhost/enchiridion".to_string());
 
     let (client, connection) = tokio_postgres::connect(&database_url, NoTls).await.unwrap();
 
@@ -539,4 +478,209 @@ pub async fn init() -> App<HyperRequest, Ctx, Arc<Client>> {
 
 ```
 
-And just like that, running `cargo test`, everything passes!
+And just like that, running `cargo test` -- it fails. Well of course. We added a postgres integration into the server at `app.rs` on lines 22-31. You can either start your postgres of choice, or, you can add a docker compose file:
+
+<!--- file:docker-compose.yml -->
+```yml
+version: "2.1"
+services:
+  enchiridion-postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    volumes:
+      - .:/data
+    environment:
+      - POSTGRES_DB=enchiridion
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "--username=postgres"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+    command: ["-c", "shared_buffers=256MB"]
+```
+
+Just run `docker-compose up -d`, and now `cargo test` should work.
+
+It's important to note that, although our tests pass, we're not actually _testing_ anything right now besides that an endpoint exists and returns a 200 response code. That's useful, but not tremendously so. Let's add another test that tests whether a user is actually inserted into the database.
+
+When a user signs in with OAuth, they're first directed to Github, where they verify their information, then they are redirected back to us at our OAuth endpoint with a simple get request. The get request will have a `code` and `state` query parameter that we must get. We will then verify the `state` and (if valid) use the `code` to create a new session with github via a `POST` request.
+
+Let's write a few tests to validate that the `code` and `state` are present.
+
+<!--- file:src/tests/oauth.rs -->
+```rs
+use hyper::{Body, Request};
+use thruster::testing;
+use tokio::runtime::Runtime;
+
+use crate::app;
+
+#[test]
+fn it_should_have_an_oauth_route() {
+    let _ = Runtime::new().unwrap().block_on(async {
+        let app = app::init().await;
+
+        let response = testing::request(
+            &app,
+            Request::builder()
+                .method("GET")
+                .uri("/users/github/oauth?state=0&code=0")
+                .body(Body::from(""))
+                .unwrap(),
+        )
+        .await;
+
+        assert!(response.status == 200);
+    });
+}
+
+#[test]
+fn it_should_require_state_in_oauth() {
+    let _ = Runtime::new().unwrap().block_on(async {
+        let app = app::init().await;
+
+        let response = testing::request(
+            &app,
+            Request::builder()
+                .method("GET")
+                .uri("/users/github/oauth?code=0")
+                .body(Body::from(""))
+                .unwrap(),
+        )
+        .await;
+
+        assert!(response.status == 400);
+    });
+}
+
+#[test]
+fn it_should_require_code_in_oauth() {
+    let _ = Runtime::new().unwrap().block_on(async {
+        let app = app::init().await;
+
+        let response = testing::request(
+            &app,
+            Request::builder()
+                .method("GET")
+                .uri("/users/github/oauth?state=0")
+                .body(Body::from(""))
+                .unwrap(),
+        )
+        .await;
+
+        assert!(response.status == 400);
+    });
+}
+```
+
+Note that in addition to the new tests, we also added some dummy parameters to the valid test case. That's to ensure that the valid test case still works.
+
+If we run `cargo test` now, we should see two failing tests.
+
+Now let's add the checks _but no validation of the state or code_ to the controller. First though, since we're parsing query params, we'll want to add the provided `query_params` middleware to the route:
+
+<!--- file:src/app.rs -->
+```rs
+use hyper::Body;
+use log::error;
+use std::env;
+use std::sync::Arc;
+use thruster::context::basic_hyper_context::{
+    generate_context, BasicHyperContext as Ctx, HyperRequest,
+};
+use thruster::App;
+use thruster::{async_middleware, middleware_fn};
+use thruster::{MiddlewareNext, MiddlewareResult};
+use tokio;
+use tokio_postgres::{Client, NoTls};
+
+use crate::controllers::oauth;
+
+#[middleware_fn]
+async fn ping(mut context: Ctx, _next: MiddlewareNext<Ctx>) -> MiddlewareResult<Ctx> {
+    let val = "pong";
+    context.body = Body::from(val);
+    Ok(context)
+}
+
+#[middleware_fn]
+async fn four_oh_four(mut context: Ctx, _next: MiddlewareNext<Ctx>) -> MiddlewareResult<Ctx> {
+    let val = "Oops! That route doesn't exist.";
+    context.body = Body::from(val);
+    context.status(404);
+    Ok(context)
+}
+
+pub async fn init() -> App<HyperRequest, Ctx, Arc<Client>> {
+    let database_url = env::var("DATABASE_URL")
+        .unwrap_or("postgres://postgres:postgres@localhost/enchiridion".to_string());
+
+    let (client, connection) = tokio_postgres::connect(&database_url, NoTls).await.unwrap();
+
+    tokio::spawn(async move {
+        if let Err(e) = connection.await {
+            error!("connection error: {}", e);
+        }
+    });
+
+    let mut app = App::<HyperRequest, Ctx, Arc<Client>>::create(generate_context, Arc::new(client));
+    app.get("/ping", async_middleware!(Ctx, [ping]));
+    app.get(
+        "/users/github/oauth",
+        async_middleware!(
+            Ctx,
+            [
+                thruster::middleware::query_params::query_params,
+                oauth::github
+            ]
+        ),
+    );
+    app.set404(async_middleware!(Ctx, [four_oh_four]));
+
+    app
+}
+```
+
+Thruster doesn't include basic parsing middleware in routes to optimize performance. There are mechanisms we'll get into later, specifically with logging as an example, to add middleware to _all_ routes if you want.
+
+<!--- file:src/controllers/oauth.rs -->
+```rs
+use thruster::{
+    errors::ThrusterError, middleware_fn, BasicHyperContext as Ctx, MiddlewareNext,
+    MiddlewareResult,
+};
+
+#[middleware_fn]
+pub async fn github(context: Ctx, _next: MiddlewareNext<Ctx>) -> MiddlewareResult<Ctx> {
+    let _state = match context.query_params.get("state") {
+        Some(s) => s,
+        None => {
+            return Err(ThrusterError {
+                context: Ctx::default(),
+                message: "The OAuth request must contain a state in the query parameters."
+                    .to_string(),
+                status: 400,
+                cause: None,
+            })
+        }
+    };
+
+    let _code = match context.query_params.get("code") {
+        Some(s) => s,
+        None => {
+            return Err(ThrusterError {
+                context: Ctx::default(),
+                message: "The OAuth request must contain a code in the query parameters."
+                    .to_string(),
+                status: 400,
+                cause: None,
+            })
+        }
+    };
+
+    Ok(context)
+}
+```
