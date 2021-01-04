@@ -4,14 +4,17 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "parcel build ./index.ts"
+    "build": "parcel build ./index.ts",
+    "prepublish": "parcel build ./index.ts"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "nodegit": "^0.27.0",
     "parcel": "^2.0.0-beta.1"
   },
   "devDependencies": {
-    "@types/node": "^14.14.19"
+    "@types/node": "^14.14.19",
+    "@types/nodegit": "^0.26.12"
   }
 }
